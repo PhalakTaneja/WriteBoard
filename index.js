@@ -1,7 +1,11 @@
 import express from 'express';
 import httpServer from 'http';
 import { Server } from 'socket.io';
+import dotenv from 'dotenv';
+import connectDB from './config/db.js';
 
+dotenv.config();
+connectDB();
 const app = express();
 const server = httpServer.createServer(app);
 const io = new Server(server);
