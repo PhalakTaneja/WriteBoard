@@ -8,6 +8,7 @@ import connectDB from './config/db.js';
 import authRoutes from './routes/auth.js';
 import { socketAuth } from './middleware/auth.js';
 import Board from './models/board.js';
+import boardRoutes from './routes/boardRoutes.js';
 
 dotenv.config();
 connectDB();
@@ -26,6 +27,8 @@ app.use(cors());
 app.use(express.json());
 
 app.use('/api/auth', authRoutes);
+app.use('/api/board', boardRoutes);
+
 io.use(socketAuth);
 app.get('/', (req, res) => {
   res.send('WriteBoard API is running');
@@ -38,7 +41,6 @@ const BUFFER_LIMIT = 40;
 io.on('connection', (socket) => {
   console.log(`User connected: ${socket.user.username}`);
 
-  // JOIN ROOM
   socket.on("joinBoard", async (boardId) => {
     socket.join(boardId);
     console.log(`User ${socket.user.username} joined board: ${boardId}`);
