@@ -50,7 +50,7 @@ io.on('connection', (socket) => {
       let board = await Board.findOne({ roomId: boardId });
       
       if (!board) {
-        board = await Board.create({ roomId: boardId, owner: socket.user.id });
+        board = await Board.create({ roomId: boardId, name: "Untitled Board", owner: socket.user.id });
       }
       
       socket.emit("hydrate", board.history);

@@ -16,6 +16,7 @@ router.post('/register', async (req, res) => {
     try {
         const userExists = await User.findOne({username});
         if(userExists) return res.status(400).json({ message: 'Username already exists' });
+        
         const user = await User.create({ username, password });
         res.status(201).json({
             _id: user._id,
@@ -31,32 +32,27 @@ router.post('/login', async (req, res) => {
     const { username, password } = req.body;
     try {
         const user = await User.findOne({ username });
-        if(!user) {
-            return res.status(404).json({ message: 'User not found' });
+        if (!user || !(await user.matchPassword(password))) {
+            return res.status(401).json({ message: 'Invalid username or password' });
         }
-        if(user && !(await user.matchPassword(password))) {
-            return res.status(404).json({ message: 'Redacted for obvious reasons' });
+
+        const isMatch = await user.matchPassword(password);
+
+        if(!isMatch) {
+            return res.status(401).json({ message: 'Invalid username or password' });
         }
-        if (user) {
-            const isMatch = await user.matchPassword(password);
-            console.log("Password match?:", isMatch ? "Yes!" : "No");
-        }
-        if(user && (await user.matchPassword(password))) {
-            res.json({
-                _id: user._id,
-                username: user.username,
-                token: generateToken(user._id),
-            }); 
-        }else{
-            res.status(401).json({ message: 'Invalid username or password' });
-        }
+
+        res.json({
+            _id: user._id,
+            username: user.username,
+            token: generateToken(user._id),
+        }); 
     } catch(error) {
         res.status(500).json({ message: 'Server error' });
     }
 });
 
 router.delete('/delete', protect, async (req, res) => {
-    console.log("Delete request received for user ID:", req.user._id);
     try {
         const { password } = req.body;
 
@@ -81,14 +77,17 @@ router.delete('/delete', protect, async (req, res) => {
         res.status(200).json({ message: 'Account successfully deleted' });
     } catch (error) {
         res.status(500).json({ message: 'Server error' });
+        console.error(error);
     }
 });
+
 router.get('/profile', protect, async (req, res) => {
     try {
         const user = await User.findById(req.user._id).select('-password');
         res.json(user);
     } catch (error) {
         res.status(500).json({ message: 'Server error' });
+        console.error(error);
     }
 });
 
